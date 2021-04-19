@@ -1,0 +1,347 @@
+/*
+Jae Park
+Mr. Rosen
+2018-11-27
+
+*/
+
+// The "Numbereditor" class.
+import java.awt.*;
+import hsa.Console;
+import java.io.*;
+import hsa.Message;
+
+public class Numbereditor
+{
+    static Console c;           // The output console
+    static int userInt = 0;
+    String userInput = "";
+    String fileName = "Untitled";
+    static String choice = "";
+    static boolean saved = false;
+    //boolean somethingInRam = false;
+    static boolean newname = false;
+
+
+    public Numbereditor ()
+    {
+        c = new Console ();
+    }
+
+
+    public void title ()
+    {
+        c.clear ();
+        String title = fileName + ".jae";
+        c.print (' ', 40 - title.length () / 2);
+        c.println (title);
+        c.println ();
+    }
+
+
+    public void mainMenu ()
+    {
+        title ();
+        // List of options printed in the main menu
+        c.println ("(a) New");
+        c.println ("(b) Open");
+        c.println ("(c) Modify");
+        c.println ("(d) Display");
+        c.println ("(e) Save");
+        c.println ("(f) Save As");
+        c.println ("(g) Quit");
+
+        // ERRORTRAPPING
+        while (true)
+        {
+            c.setCursor (10, 7);
+            c.println ();
+            c.setCursor (10, 7);
+            c.print ("Please enter one of the menu choices: ");
+            choice = c.readLine ();     // gets user input
+            // If not a valid choice input
+            if (!(choice.equals ("a") || choice.equals ("b") || choice.equals ("c")
+                        || choice.equals ("d") || choice.equals ("e") || choice.equals ("f") || choice.equals ("g")))
+            {
+                new Message ("Please enter a valid choice!", "Error!");
+            }
+            // If user has entered data but not saved and selects new again (somethingInRam true (user entered data), saved false (if user hasn't saved data))
+            else if (choice.equals ("a") && somethingInRam == true && saved == false)
+            {
+                new Message ("There is already an existing document! Please save it.", "Error!");
+            }
+            // If user has entered data but not saved and selects open / quit again
+            else if ((choice.equals ("b") || choice.equals ("g")) && somethingInRam == true && saved == false)
+            {
+                new Message ("You have not saved your contents yet! Please save it.", "Error!");
+            }
+            // If user tries to save or save as when they first start the program
+            else if ((choice.equals ("e") || choice.equals ("f")) && somethingInRam == false)
+            {
+                new Message ("There is nothing to save!", "Error!");
+            }
+            // If user wants to modify ram when there is nothing to modify
+            else if ((choice.equals ("c") || choice.equals ("d")) && somethingInRam == false)
+            {
+                new Message ("There is no temporary file to modify/display!", "Error!");
+            }
+            else
+                break;
+        }
+
+    }
+
+
+    public void askData (boolean temp)
+    {
+        if (temp == true)   // checks if this askData is for a new file
+        {
+            newname = false;
+            fileName = "Untitled";  // if it's for a new file, it  changes the fileename to Untitled because  it's a new file
+        }
+
+        title ();
+        // ERRORTRAP
+        while (true)
+        {
+            try
+            {
+                title ();
+                c.print ("Please enter the integer you wish to store: ");
+                userInput = c.readLine ();                  // reads user input
+                userInt = Integer.parseInt (userInput);       // converts the user input string into an integer
+                break;
+            }
+            catch (Exception e)
+            {
+                new Message ("Please input an integer. Press ok", "Error!");    // error message
+            }
+        }
+        somethingInRam = true;
+        saved = false;
+
+    }
+
+
+    public void display ()
+    {
+        title ();
+        c.println ("The current value is " + userInput);
+        pauseProgram ();
+    }
+
+
+    public void save ()
+    {
+        title ();
+        PrintWriter output;
+        try
+        {
+            output = new PrintWriter (new FileWriter (fileName + ".jae"));
+            output.println ("% Numbereditor - v.1");
+            output.println (userInt);
+            output.close ();
+        }
+        catch (Exception e)
+        {
+        }
+        saved = true;
+        new Message ("Succesfully saved!");
+
+    }
+
+
+    public void saveas (boolean t)
+    {
+        title ();
+        PrintWriter output;
+        boolean valid = true;
+        if (t == true)
+        {
+            new Message ("You have been redirected to save as.", "Notice!");
+        }
+        while (true)
+        {
+            String temp = "";
+            c.setCursor (3, 10);
+            c.print ("Please enter the file name you wish to save it as: ");
+            fileName = c.readLine ();
+            // Errortrap for illegal windows keys
+            for (int i = 0 ; i < fileName.length () ; i++)
+            {
+                if (fileName.charAt (i) == '>' || fileName.charAt (i) == '<' || fileName.charAt (i) == '"' || fileName.charAt (i) == '/' || fileName.charAt (i) == '\\'
+                        || fileName.charAt (i) == '|' || fileName.charAt (i) == '?' || fileName.charAt (i) == '*' || fileName.charAt (i) == ':')
+                {
+                    valid = false;
+                    new Message ("Please enter proper windows characters!", "Error!");
+                    break;
+                }
+            }
+            for (int i = 0 ; i < fileName.length () ; i++)
+            {
+                if (fileName.charAt (i) != '.')
+                {
+                    temp += fileName.charAt (i);
+                }
+                else
+                {
+                    new Message ("Please enter a valid file name! No periods.", "Error!");
+                    fileName = "Untitled";
+                    break;
+                }
+            }
+            fileName = temp;
+            if (valid == true)
+                break;
+        }
+        try
+        {
+            output = new PrintWriter (new FileWriter (fileName + ".jae"));
+            output.println ("% Numbereditor - v.1");
+            output.println (userInt);
+            output.close ();
+        }
+        catch (Exception e)
+        {
+        }
+        saved = true;
+        newname = true;
+    }
+
+
+    public void open ()
+    {
+        String temp = "";
+        boolean valid = true;
+        BufferedReader input;
+
+        title ();
+        while (true)
+        {
+            valid = true;
+            c.setCursor (3, 10);
+            c.println ();
+            c.setCursor (3, 10);
+            c.print ("Enter file name, including the extension .jae: ");
+            fileName = c.readLine ();
+
+            if (!((fileName.substring (fileName.length () - 4)).equals (".jae")))
+            {
+                new Message ("Invalid file extension!", "Error!");
+            }
+            else
+            {
+                for (int i = 0 ; i < fileName.length () ; i++)
+                {
+                    if (fileName.charAt (i) == '>' || fileName.charAt (i) == '<' || fileName.charAt (i) == ':'
+                            || fileName.charAt (i) == '"' || fileName.charAt (i) == 92 || fileName.charAt (i) == '/'
+                            || fileName.charAt (i) == '|' || fileName.charAt (i) == '?' || fileName.charAt (i) == '*')
+                    {
+                        valid = false;
+                        break;
+                    }
+                }
+                if (valid == false)
+                {
+                    new Message ("Invalid file name!", "Error!");
+                }
+                else
+                    break;
+            }
+        }
+
+        try
+        {
+            input = new BufferedReader (new FileReader (fileName));
+            temp = input.readLine ();
+            userInput = input.readLine ();
+            if (temp.equals ("% Numbereditor - v.1"))
+            {
+                c.println ();
+                c.println ("The integer value in the file " + fileName + " is: " + userInput);           // output message
+                fileName = fileName.substring (0, fileName.length () - 4);
+                somethingInRam = true;
+                saved = true;
+                newname = true;
+                pauseProgram ();
+            }
+            else
+            {
+                new Message ("This type of file cannot be opened with this program. Bad header!", "Error!");
+                fileName = "Untitled";
+            }
+        }
+        catch (IOException e)
+        {
+            fileName = "Untitled";
+            new Message ("File does not exist!", "Error!");
+        }
+
+    }
+
+
+    public void pauseProgram ()
+    {
+        char key;
+        c.print ("Press any key to continue...");           // pauses program
+        key = c.getChar ();
+    }
+
+
+    public void goodbye ()
+    {
+        title ();
+        c.println ("Thanks for using this program!");
+        c.println ("By: Jae Park");     // prints the goodbye message
+        pauseProgram ();
+        c.close ();             // closes the ouput window
+    }
+
+
+    public static void main (String[] args)
+    {
+        Numbereditor d = new Numbereditor ();
+        while (true)
+        {
+            d.mainMenu ();
+            // Directory
+            if (choice.equals ("a"))
+            {
+                d.askData (true);
+            }
+            else if (choice.equals ("b"))
+            {
+                d.open ();
+            }
+            else if (choice.equals ("c"))
+            {
+                d.askData (false);
+            }
+            else if (choice.equals ("d"))
+            {
+                d.display ();
+            }
+            else if (choice.equals ("e"))
+            {
+                // If the user has entered data and presses save instead of save as, it redirects the user to save as instead of save
+                if (newname == false)
+                {
+                    d.saveas (true);
+                }
+                else
+                    d.save ();
+            }
+            else if (choice.equals ("f"))
+            {
+                d.saveas (false);
+            }
+            else
+                break;
+        }
+        d.goodbye ();
+
+        // Place your program here.  'c' is the output console
+    } // main method
+} // Numbereditor class
+
+
